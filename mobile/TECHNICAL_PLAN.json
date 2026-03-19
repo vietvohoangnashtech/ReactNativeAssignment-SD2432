@@ -1,0 +1,1107 @@
+{
+  "title": "React Native Mobile App - Comprehensive Technical Optimization Plan",
+  "createdDate": "2026-03-19",
+  "currentState": {
+    "architecture": "Flat src/ structure (screens/, components/, store/)",
+    "stateManagement": "Zustand (authStore.ts, cartStore.ts)",
+    "testCoverage": "~25% (unit tests only)",
+    "typeScriptStrict": false,
+    "dependencies": {
+      "removed": ["zustand"],
+      "added": ["@reduxjs/toolkit", "react-redux"]
+    }
+  },
+  "phases": [
+    {
+      "phaseNumber": 1,
+      "name": "Foundation & Tooling Setup",
+      "priority": "P0",
+      "description": "Establish Redux Toolkit infrastructure, enhance TypeScript strictness, and prepare the codebase for large-scale refactoring.",
+      "objectives": [
+        "Install Redux Toolkit and react-redux dependencies",
+        "Enable strict TypeScript configuration with noImplicitAny",
+        "Create Redux store structure template (slices, async thunks, selectors)",
+        "Set up test utilities and Redux testing infrastructure",
+        "Create feature-first directory structure template",
+        "Document Redux/feature structure conventions in .github/instructions/"
+      ],
+      "tasks": [
+        {
+          "id": "task-1-1",
+          "title": "Install Redux Toolkit & related dependencies",
+          "description": "Add @reduxjs/toolkit, react-redux, redux-persist, and supporting types to package.json. Update jest.config.js to handle Redux modules.",
+          "files": [
+            "package.json",
+            "jest.config.js"
+          ],
+          "dependencies": [],
+          "effort": "XS",
+          "validationCriteria": [
+            "npm install completes without errors",
+            "Redux packages appear in node_modules",
+            "jest.config.js transformIgnorePatterns includes redux utilities"
+          ]
+        },
+        {
+          "id": "task-1-2",
+          "title": "Enable strict TypeScript configuration",
+          "description": "Update tsconfig.json with strict mode, noImplicitAny: true, noImplicitReturns: true, exactly match project spec requirements.",
+          "files": [
+            "tsconfig.json"
+          ],
+          "dependencies": [],
+          "effort": "XS",
+          "validationCriteria": [
+            "tsconfig.json has strict: true",
+            "noImplicitAny, noImplicitReturns, noUnusedLocals all true",
+            "tsc --noEmit runs without errors (after type fixes in later phases)"
+          ]
+        },
+        {
+          "id": "task-1-3",
+          "title": "Create Redux store template & structure",
+          "description": "Establish src/store/ with rootReducer.ts, store.ts, middleware configuration. Create template slices, create hooks (useAppDispatch, useAppSelector). Document in .github/instructions/redux.instructions.md.",
+          "files": [
+            "src/store/rootReducer.ts",
+            "src/store/store.ts",
+            "src/store/hooks.ts",
+            ".github/instructions/redux.instructions.md"
+          ],
+          "dependencies": ["task-1-1"],
+          "effort": "S",
+          "validationCriteria": [
+            "Store initializes without errors",
+            "rootReducer properly combines slices",
+            "Custom hooks (useAppDispatch, useAppSelector) are exported",
+            "Redux DevTools integration works",
+            "Instructions document Redux patterns"
+          ]
+        },
+        {
+          "id": "task-1-4",
+          "title": "Create test utilities for Redux",
+          "description": "Add src/utils/testing/reduxTestUtils.ts with custom renderWithRedux(), setupTestStore(), mock selectors for testing Redux-connected components.",
+          "files": [
+            "src/utils/testing/reduxTestUtils.ts",
+            "jest.config.js"
+          ],
+          "dependencies": ["task-1-3"],
+          "effort": "S",
+          "validationCriteria": [
+            "renderWithRedux() helper renders components with Redux provider",
+            "setupTestStore() creates isolated Redux store per test",
+            "Redux middleware properly configured for testing",
+            "Mock selectors return predictable values"
+          ]
+        },
+        {
+          "id": "task-1-5",
+          "title": "Create feature directory structure template",
+          "description": "Document and create sample feature folder structure: src/features/{featureName}/{screens,components,hooks,services,store,types,utils,navigation}/. Add create-feature script or documentation.",
+          "files": [
+            "src/features/.gitkeep",
+            ".github/instructions/react-archiecture.instructions.md (update existing)"
+          ],
+          "dependencies": [],
+          "effort": "S",
+          "validationCriteria": [
+            "Feature template documented in architecture instructions",
+            "Sample feature structure created and committed",
+            "Barrel exports (index.ts) configured per feature",
+            "Developers have clear guidelines for feature creation"
+          ]
+        },
+        {
+          "id": "task-1-6",
+          "title": "Update test jest.config.js for Redux and features",
+          "description": "Extend moduleNameMapper with feature aliases (@/features/...), update setupFilesAfterEnv to configure Redux testing utilities.",
+          "files": [
+            "jest.config.js"
+          ],
+          "dependencies": ["task-1-4"],
+          "effort": "XS",
+          "validationCriteria": [
+            "Jest can resolve @/features/* paths",
+            "Redux test utilities initialize automatically",
+            "Test suite runs without path resolution errors"
+          ]
+        }
+      ],
+      "estimatedDays": 2,
+      "risks": [
+        "Redux DevTools extension may need debugging in test environment",
+        "TypeScript strictness may reveal existing type issues (expected, handled in Phase 4)"
+      ],
+      "parallelize": [
+        "task-1-1",
+        "task-1-2",
+        "task-1-5"
+      ],
+      "rollbackStrategy": "All changes are additive; can revert package.json and tsconfig.json if needed. No application logic affected."
+    },
+    {
+      "phaseNumber": 2,
+      "name": "Redux State Management Migration",
+      "priority": "P0",
+      "description": "Migrate from Zustand to Redux Toolkit for auth and cart stores. Implement thunks for async operations, selectors for efficient access.",
+      "objectives": [
+        "Migrate authStore (Zustand) → authSlice.ts + authThunks (async operations)",
+        "Migrate cartStore (Zustand) → cartSlice.ts + selectors",
+        "Update axios interceptor to use Redux dispatch/selector for token management",
+        "Create auth and cart selectors (useAppSelector hooks) for component usage",
+        "Implement token refresh mechanism in axios interceptor",
+        "Update all component imports: useAuthStore → useAppSelector/useAppDispatch",
+        "Keep Zustand as peer dependency until Phase 5 to avoid breaking changes"
+      ],
+      "tasks": [
+        {
+          "id": "task-2-1",
+          "title": "Create authSlice.ts with Redux Toolkit",
+          "description": "Convert authStore.ts to authSlice.ts using createSlice. Define initial state (isLoggedIn, token, user, loading), reducers (setUser, clearAuth). Move side effects to thunks in next task.",
+          "files": [
+            "src/slices/authSlice.ts",
+            "src/store/rootReducer.ts (update)"
+          ],
+          "dependencies": ["task-1-3"],
+          "effort": "M",
+          "validationCriteria": [
+            "authSlice properly initializes state",
+            "Actions (setUser, clearAuth, etc.) are generated by createSlice",
+            "authSlice integrated in rootReducer",
+            "Redux state shape matches Zustand structure for easier migration",
+            "Initial state loads from AsyncStorage (handled by thunk in task-2-3)"
+          ]
+        },
+        {
+          "id": "task-2-2",
+          "title": "Create authThunks.ts for async auth operations",
+          "description": "Create async thunks: loginThunk(email, password), logoutThunk(), loadTokenThunk(), loadUserThunk(). These handle API calls, token storage in EncryptedStorage, and error handling.",
+          "files": [
+            "src/thunks/authThunks.ts",
+            "src/slices/authSlice.ts (update extraReducers)"
+          ],
+          "dependencies": ["task-2-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "loginThunk calls API, stores token in EncryptedStorage, dispatches success/failure",
+            "logoutThunk clears EncryptedStorage and Redux state",
+            "loadTokenThunk runs on app initialization, restores session",
+            "All thunks handle errors without exposing backend details",
+            "Loading states managed via pending/fulfilled/rejected actions"
+          ]
+        },
+        {
+          "id": "task-2-3",
+          "title": "Create auth selectors & custom hooks",
+          "description": "Create src/store/selectors/authSelectors.ts with selectUser, selectToken, selectIsLoggedIn, selectAuthLoading. Create custom hooks: useAuth(), useAuthDispatch() for easy component access.",
+          "files": [
+            "src/store/selectors/authSelectors.ts",
+            "src/hooks/useAuth.ts"
+          ],
+          "dependencies": ["task-2-1"],
+          "effort": "S",
+          "validationCriteria": [
+            "Selectors memoized and prevent unnecessary re-renders",
+            "useAuth() hook returns { user, isLoggedIn, loading, dispatch actions }",
+            "Selectors handle undefined/null gracefully",
+            "TypeScript types inferred correctly from Redux state"
+          ]
+        },
+        {
+          "id": "task-2-4",
+          "title": "Update axios interceptor with Redux token refresh",
+          "description": "Refactor src/utils/axios.ts to use Redux getState/dispatch. Implement token refresh mechanism: on 401, attempt refresh, retry request, or redirect to login. Remove direct Zustand dependency.",
+          "files": [
+            "src/utils/axios.ts",
+            "src/thunks/authThunks.ts (add refreshTokenThunk if needed)"
+          ],
+          "dependencies": ["task-2-2", "task-2-3"],
+          "effort": "M",
+          "validationCriteria": [
+            "Interceptor reads token from Redux state",
+            "On 401, attempts token refresh before failing",
+            "Refresh token stored safely in EncryptedStorage",
+            "Failed refresh redirects to login/clears auth state",
+            "No Zustand imports remain",
+            "Error responses don't leak backend details"
+          ]
+        },
+        {
+          "id": "task-2-5",
+          "title": "Create cartSlice.ts with Redux Toolkit",
+          "description": "Convert cartStore.ts to cartSlice.ts. Define initial state (items, total, itemCount), reducers (addItem, removeItem, updateQuantity, clearCart). Handle computed values via selectors.",
+          "files": [
+            "src/slices/cartSlice.ts",
+            "src/store/rootReducer.ts (update)"
+          ],
+          "dependencies": ["task-1-3"],
+          "effort": "S",
+          "validationCriteria": [
+            "cartSlice properly manages items array",
+            "All reducers handle Immer updates correctly",
+            "cartSlice integrated in rootReducer",
+            "State shape matches Zustand structure"
+          ]
+        },
+        {
+          "id": "task-2-6",
+          "title": "Create cart selectors & custom hooks",
+          "description": "Create src/store/selectors/cartSelectors.ts with selectCartItems, selectCartTotal, selectItemCount. Create useCart() hook. Ensure computed values (total, count) are memoized.",
+          "files": [
+            "src/store/selectors/cartSelectors.ts",
+            "src/hooks/useCart.ts"
+          ],
+          "dependencies": ["task-2-5"],
+          "effort": "S",
+          "validationCriteria": [
+            "selectCartTotal computes total from items (memoized)",
+            "selectItemCount returns accurate count",
+            "useCart() hook provides dispatch actions + selectors",
+            "Selectors prevent unnecessary re-renders"
+          ]
+        },
+        {
+          "id": "task-2-7",
+          "title": "Migrate LoginScreen to use Redux",
+          "description": "Update LoginScreen.tsx: replace useAuthStore with useAppDispatch + loginThunk. Update error handling to properly type errors. Test login/logout flow.",
+          "files": [
+            "src/screens/LoginScreen.tsx",
+            "__tests__/screens/LoginScreen.test.tsx (update tests)"
+          ],
+          "dependencies": ["task-2-2", "task-2-3"],
+          "effort": "M",
+          "validationCriteria": [
+            "LoginScreen dispatches loginThunk on form submit",
+            "Loading state reflects Redux loading boolean",
+            "Error messages properly typed and safe",
+            "Tests pass with Redux setup",
+            "Navigation to home screen after login"
+          ]
+        },
+        {
+          "id": "task-2-8",
+          "title": "Migrate CartScreen/CheckoutScreen to use Redux",
+          "description": "Update CartScreen.tsx, CheckoutScreen.tsx: replace useCartStore with useAppDispatch + cartSelectors. Handle checkout state management.",
+          "files": [
+            "src/screens/CartScreen.tsx",
+            "src/screens/CheckoutScreen.tsx",
+            "__tests__/screens/CartScreen.test.tsx (update)"
+          ],
+          "dependencies": ["task-2-6"],
+          "effort": "M",
+          "validationCriteria": [
+            "Cart operations dispatch correct Redux actions",
+            "Selectors properly display cart items and totals",
+            "Checkout flow manages order state in Redux",
+            "Tests pass with Redux setup"
+          ]
+        },
+        {
+          "id": "task-2-9",
+          "title": "Implement Redux persistence (optional but recommended)",
+          "description": "Add redux-persist middleware to persist auth token and cart state to AsyncStorage. Configure whitelist of reducers to persist.",
+          "files": [
+            "src/store/store.ts (update with persistor)",
+            "App.tsx (wrap with PersistGate)"
+          ],
+          "dependencies": ["task-1-3"],
+          "effort": "S",
+          "validationCriteria": [
+            "Redux state persists across app restarts",
+            "Auth token is available on cold start",
+            "Cart items persist if desired",
+            "Sensitive data (passwords) not persisted"
+          ]
+        },
+        {
+          "id": "task-2-10",
+          "title": "Verify Redux migration & remove Zustand",
+          "description": "Run all screens, verify auth/cart flows work. Check for remaining Zustand imports. Remove zustand from package.json only after all tests pass.",
+          "files": [
+            "package.json (remove zustand/immer)",
+            "jest.config.js (remove zustand from transformIgnorePatterns)"
+          ],
+          "dependencies": [
+            "task-2-7",
+            "task-2-8"
+          ],
+          "effort": "M",
+          "validationCriteria": [
+            "All screens function correctly with Redux",
+            "No Zustand imports remain in codebase",
+            "Tests pass with Redux stores",
+            "No console errors or warnings",
+            "Login/logout, cart operations all work"
+          ]
+        }
+      ],
+      "estimatedDays": 5,
+      "risks": [
+        "Breaking changes during migration may require careful branching strategy",
+        "Token refresh logic may need API endpoint not yet implemented",
+        "Redux persistence may conflict with existing AsyncStorage usage - coordinate with Phase 4"
+      ],
+      "parallelize": [
+        "task-2-1",
+        "task-2-5"
+      ],
+      "rollbackStrategy": "Keep Zustand stores in separate branch. Can revert to Zustand if Redux migration fails. Use feature flags to control store usage per screen."
+    },
+    {
+      "phaseNumber": 3,
+      "name": "Architecture Refactoring to Feature-First",
+      "priority": "P1",
+      "description": "Reorganize codebase from flat src/screens/, src/components/ to feature-based src/features/{auth,cart,product,order}/. Implement barrel exports and feature-scoped navigation.",
+      "objectives": [
+        "Create feature folders: src/features/{auth,product,cart,order,profile}",
+        "Move screens, components, hooks, services, store, types, utils into respective features",
+        "Create barrel exports (index.ts) per feature",
+        "Refactor src/components/ to contain only shared reusable UI components",
+        "Update navigation to be feature-scoped and properly typed",
+        "Update all import paths throughout codebase",
+        "Remove old flat directory structure"
+      ],
+      "tasks": [
+        {
+          "id": "task-3-1",
+          "title": "Create feature directory structure & move auth feature",
+          "description": "Create src/features/auth/ with screens/, components/, hooks/, services/, store/, types/, utils/ subdirectories. Move LoginScreen, LoginForm, useAuth, authThunks, authSlice, auth types. Create barrel export (index.ts).",
+          "files": [
+            "src/features/auth/screens/LoginScreen.tsx",
+            "src/features/auth/components/LoginForm.tsx",
+            "src/features/auth/hooks/useAuth.ts",
+            "src/features/auth/services/authService.ts",
+            "src/features/auth/store/authSlice.ts",
+            "src/features/auth/thunks/authThunks.ts",
+            "src/features/auth/types/auth.types.ts",
+            "src/features/auth/index.ts"
+          ],
+          "dependencies": ["task-2-10"],
+          "effort": "M",
+          "validationCriteria": [
+            "Auth feature folder created with all required subdirectories",
+            "All auth-related files moved and paths updated",
+            "Barrel export (index.ts) exports public API",
+            "No import path errors after refactoring",
+            "Auth screens and components still function"
+          ]
+        },
+        {
+          "id": "task-3-2",
+          "title": "Move cart feature to feature-first structure",
+          "description": "Create src/features/cart/ and move CartScreen, CartItem component, useCart, cartSlice, cart services and types. Create barrel export.",
+          "files": [
+            "src/features/cart/screens/CartScreen.tsx",
+            "src/features/cart/components/CartItem.tsx",
+            "src/features/cart/hooks/useCart.ts",
+            "src/features/cart/store/cartSlice.ts",
+            "src/features/cart/types/cart.types.ts",
+            "src/features/cart/index.ts"
+          ],
+          "dependencies": ["task-3-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "Cart feature folder created and organized",
+            "All cart files moved with updated imports",
+            "CartScreen and cart operations function correctly",
+            "No circular dependencies"
+          ]
+        },
+        {
+          "id": "task-3-3",
+          "title": "Move product/catalog feature to feature-first structure",
+          "description": "Create src/features/product/ and move HomeScreen, ProductDetailScreen, ProductCard, product services, product types. Create barrel export.",
+          "files": [
+            "src/features/product/screens/HomeScreen.tsx",
+            "src/features/product/screens/ProductDetailScreen.tsx",
+            "src/features/product/components/ProductCard.tsx",
+            "src/features/product/services/productService.ts",
+            "src/features/product/types/product.types.ts",
+            "src/features/product/index.ts"
+          ],
+          "dependencies": ["task-3-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "Product feature organized correctly",
+            "HomeScreen and ProductDetailScreen function",
+            "Product API calls work correctly",
+            "No import errors"
+          ]
+        },
+        {
+          "id": "task-3-4",
+          "title": "Move order/checkout features to feature-first structure",
+          "description": "Create src/features/order/ and move CheckoutScreen, OrderHistoryScreen, order services, order types. Move src/features/checkout/ if exists. Create barrel export.",
+          "files": [
+            "src/features/order/screens/CheckoutScreen.tsx",
+            "src/features/order/screens/OrderHistoryScreen.tsx",
+            "src/features/order/services/orderService.ts",
+            "src/features/order/types/order.types.ts",
+            "src/features/order/index.ts"
+          ],
+          "dependencies": ["task-3-2"],
+          "effort": "M",
+          "validationCriteria": [
+            "Order feature created with proper structure",
+            "Checkout and order history screens work",
+            "Order state management integrated with Redux"
+          ]
+        },
+        {
+          "id": "task-3-5",
+          "title": "Move profile feature to feature-first structure",
+          "description": "Create src/features/profile/ and move ProfileScreen, ProfileEdit, Profile component, useAuth hooks, profile services and types. Create barrel export.",
+          "files": [
+            "src/features/profile/screens/ProfileScreen.tsx",
+            "src/features/profile/components/Profile.tsx",
+            "src/features/profile/components/ProfileEdit.tsx",
+            "src/features/profile/services/profileService.ts",
+            "src/features/profile/types/profile.types.ts",
+            "src/features/profile/index.ts"
+          ],
+          "dependencies": ["task-3-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "Profile feature properly organized",
+            "Profile edit/view screens work",
+            "API calls for profile updates function"
+          ]
+        },
+        {
+          "id": "task-3-6",
+          "title": "Refactor src/components/ to contain only shared UI components",
+          "description": "Move feature-specific components into src/features/. Keep only truly reusable UI components in src/components/ (Layout, ScreenHeader, shared form components). Create subdirectories: ui/, layout/, forms/.",
+          "files": [
+            "src/components/ui/Button.tsx",
+            "src/components/layout/ScreenHeaderLayout.tsx",
+            "src/components/forms/TextInput.tsx"
+          ],
+          "dependencies": [
+            "task-3-1",
+            "task-3-2",
+            "task-3-3",
+            "task-3-4",
+            "task-3-5"
+          ],
+          "effort": "M",
+          "validationCriteria": [
+            "src/components/ contains only generic reusable components",
+            "Feature-specific components moved to features/",
+            "Shared layout and UI components properly organized",
+            "All imports updated"
+          ]
+        },
+        {
+          "id": "task-3-7",
+          "title": "Create feature-scoped navigation structure",
+          "description": "Create src/navigation/ with RootNavigator.tsx that composes feature navigators. Each feature's src/features/{name}/navigation/XyzNavigator.tsx handles its screens. Update navigation type definitions.",
+          "files": [
+            "src/navigation/RootNavigator.tsx",
+            "src/features/auth/navigation/AuthNavigator.tsx",
+            "src/features/product/navigation/ProductNavigator.tsx",
+            "src/features/cart/navigation/CartNavigator.tsx",
+            "src/features/order/navigation/OrderNavigator.tsx",
+            "src/features/profile/navigation/ProfileNavigator.tsx",
+            "src/types/navigation.ts (update)"
+          ],
+          "dependencies": [
+            "task-3-1",
+            "task-3-2",
+            "task-3-3",
+            "task-3-4",
+            "task-3-5"
+          ],
+          "effort": "L",
+          "validationCriteria": [
+            "RootNavigator composes all feature navigators",
+            "Feature navigators properly typed with RootStackParamList",
+            "Navigation between features works correctly",
+            "Deep linking works (if implemented)",
+            "Bottom tab and stack navigation properly structured"
+          ]
+        },
+        {
+          "id": "task-3-8",
+          "title": "Update all import paths across codebase",
+          "description": "Use global search/replace to update all import statements from old paths (src/screens/, src/store/) to new feature paths (src/features/{name}/screens/, src/features/{name}/store/). Verify no broken imports.",
+          "files": [
+            "src/**/*.ts",
+            "src/**/*.tsx",
+            "__tests__/**/*.ts",
+            "__tests__/**/*.tsx"
+          ],
+          "dependencies": [
+            "task-3-6",
+            "task-3-7"
+          ],
+          "effort": "M",
+          "validationCriteria": [
+            "All import paths updated",
+            "TypeScript compilation succeeds",
+            "No 'module not found' errors",
+            "IDE autocomplete resolves imports correctly"
+          ]
+        },
+        {
+          "id": "task-3-9",
+          "title": "Remove old flat directory structure",
+          "description": "Delete src/screens/, src/store/ (old zustand stores), src/components/ (feature-specific ones already moved). Create .gitkeep files in feature directories to preserve structure.",
+          "files": [],
+          "dependencies": ["task-3-8"],
+          "effort": "XS",
+          "validationCriteria": [
+            "Old directories deleted",
+            "No stale import paths remain",
+            "Git history preserved for old files",
+            "Feature .gitkeep files in place"
+          ]
+        },
+        {
+          "id": "task-3-10",
+          "title": "Verify architecture refactoring & run all features",
+          "description": "Test all screens, navigation, state management. Verify no circular dependencies. Run linter and TypeScript compiler. Update architecture documentation.",
+          "files": [
+            ".github/instructions/react-archiecture.instructions.md (verify matches new structure)"
+          ],
+          "dependencies": ["task-3-9"],
+          "effort": "M",
+          "validationCriteria": [
+            "All screens load and navigate correctly",
+            "No circular dependencies detected",
+            "TypeScript compilation passes",
+            "Linter passes without warnings",
+            "All tests still pass",
+            "Feature structure matches documentation"
+          ]
+        }
+      ],
+      "estimatedDays": 6,
+      "risks": [
+        "Large refactoring may introduce import path errors - careful testing required",
+        "Circular dependencies may appear between features - need strict architectural rules",
+        "Navigation type definitions may need careful coordination",
+        "Parallel work on multiple features may cause merge conflicts"
+      ],
+      "parallelize": [
+        "task-3-1",
+        "task-3-3",
+        "task-3-4",
+        "task-3-5"
+      ],
+      "rollbackStrategy": "Keep old directory structure in separate branch. Use git worktrees to parallelize refactoring safely. Revert commits grouped by feature if issues arise."
+    },
+    {
+      "phaseNumber": 4,
+      "name": "Code Quality & TypeScript Strictness",
+      "priority": "P1",
+      "description": "Remove all 'any' types, add proper error typing, implement validation layer, standardize error handling, and ensure theme constants are used throughout.",
+      "objectives": [
+        "Replace all 'any' types with proper TypeScript types",
+        "Implement proper error typing (AxiosError, custom error types)",
+        "Create validation utilities for form inputs and API responses",
+        "Standardize error handling across screens and services",
+        "Create custom error boundary component",
+        "Replace all hardcoded colors/spacing with theme constants",
+        "Add JSDoc comments for public APIs",
+        "Enable stricter TypeScript checks (noImplicitReturns, noUnusedLocals, etc.)"
+      ],
+      "tasks": [
+        {
+          "id": "task-4-1",
+          "title": "Create error types and error handling utilities",
+          "description": "Create src/types/error.types.ts with AppError, ApiError, ValidationError. Create src/utils/errorHandling.ts with formatError(), isAxiosError(), getErrorMessage(). Update axios interceptor to throw typed errors.",
+          "files": [
+            "src/types/error.types.ts",
+            "src/utils/errorHandling.ts",
+            "src/utils/axios.ts (update interceptors)"
+          ],
+          "dependencies": [],
+          "effort": "M",
+          "validationCriteria": [
+            "Error types properly defined and exported",
+            "formatError() safely converts any error to AppError",
+            "getErrorMessage() returns safe, user-friendly messages",
+            "No error details leak to user interface",
+            "Axios error handling uses typed errors"
+          ]
+        },
+        {
+          "id": "task-4-2",
+          "title": "Replace all 'any' types in error handlers",
+          "description": "Audit screens (LoginScreen, HomeScreen, CartScreen, CheckoutScreen, ProfileScreen, OrderHistoryScreen) and replace 'catch (err: any)' with proper error types. Use errorHandling utilities.",
+          "files": [
+            "src/features/auth/screens/LoginScreen.tsx",
+            "src/features/product/screens/HomeScreen.tsx",
+            "src/features/product/screens/ProductDetailScreen.tsx",
+            "src/features/cart/screens/CartScreen.tsx",
+            "src/features/order/screens/CheckoutScreen.tsx",
+            "src/features/profile/screens/ProfileScreen.tsx",
+            "src/features/order/screens/OrderHistoryScreen.tsx"
+          ],
+          "dependencies": ["task-4-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "All error handlers properly typed",
+            "No remaining 'any' in error catch blocks",
+            "Error messages safe and user-friendly",
+            "TypeScript strictness errors resolved",
+            "Error logging doesn't expose sensitive info"
+          ]
+        },
+        {
+          "id": "task-4-3",
+          "title": "Replace icon type 'any' with proper types",
+          "description": "In ProductDetailScreen and other places using MaterialCommunityIcons, replace icon name type assertions with proper IconProps interface. Create src/types/icons.types.ts if needed.",
+          "files": [
+            "src/features/product/screens/ProductDetailScreen.tsx",
+            "src/components/ui/IconButton.tsx (if exists)",
+            "src/types/icons.types.ts (create if needed)"
+          ],
+          "dependencies": [],
+          "effort": "S",
+          "validationCriteria": [
+            "Icon names properly typed as IconNameProp",
+            "No 'as any' type assertions for icons",
+            "Component TypeScript compilation passes"
+          ]
+        },
+        {
+          "id": "task-4-4",
+          "title": "Create validation utilities for forms & API responses",
+          "description": "Create src/utils/validation/ with email.ts, password.ts, required.ts. Create src/utils/apiValidation.ts for response validation. Add stricter typing for form data.",
+          "files": [
+            "src/utils/validation/email.ts",
+            "src/utils/validation/password.ts",
+            "src/utils/validation/required.ts",
+            "src/utils/apiValidation.ts",
+            "src/features/auth/components/LoginForm.tsx (update with validation)"
+          ],
+          "dependencies": [],
+          "effort": "M",
+          "validationCriteria": [
+            "Email validation matches backend requirements",
+            "Password validation enforces strong passwords",
+            "Form validation prevents invalid submissions",
+            "API responses validated before use",
+            "Validation errors properly typed"
+          ]
+        },
+        {
+          "id": "task-4-5",
+          "title": "Audit and remove all other 'any' type usages",
+          "description": "Use grep to find remaining 'any' type usages. Replace with proper types or document with comments justifying necessity. Run 'tsc --noEmit' to verify.",
+          "files": [
+            "src/**/*.ts",
+            "src/**/*.tsx"
+          ],
+          "dependencies": ["task-4-2", "task-4-3"],
+          "effort": "M",
+          "validationCriteria": [
+            "Grep search for 'any' returns 0 results (or documented)",
+            "tsc --noEmit passes without implicit any errors",
+            "TypeScript strict mode enabled and passing"
+          ]
+        },
+        {
+          "id": "task-4-6",
+          "title": "Replace hardcoded colors/spacing with theme constants",
+          "description": "Audit all components for hardcoded colors (e.g., '#f0f0f0', '#007AFF'), spacing values. Replace with constants from src/constants/theme.ts. Update theme.ts if missing colors.",
+          "files": [
+            "src/constants/theme.ts (ensure all colors defined)",
+            "src/components/**/*.tsx",
+            "src/features/**/*.tsx"
+          ],
+          "dependencies": [],
+          "effort": "L",
+          "validationCriteria": [
+            "All colors use theme constants",
+            "All spacing uses theme constants",
+            "Styling consistent across app",
+            "Theme easily customizable",
+            "No hardcoded color/size values in code"
+          ]
+        },
+        {
+          "id": "task-4-7",
+          "title": "Create custom error boundary component",
+          "description": "Create src/components/layout/ErrorBoundary.tsx as a React Error Boundary. Wrap screens and features with error handling. Log errors safely without exposing internals.",
+          "files": [
+            "src/components/layout/ErrorBoundary.tsx",
+            "src/navigation/RootNavigator.tsx (wrap screens)"
+          ],
+          "dependencies": ["task-4-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "Error boundary catches React render errors",
+            "User sees friendly error message",
+            "Errors logged without sensitive data",
+            "Recovery/reset option provided",
+            "App doesn't crash on component errors"
+          ]
+        },
+        {
+          "id": "task-4-8",
+          "title": "Add JSDoc comments for public APIs",
+          "description": "Add JSDoc comments to all exported functions, hooks, types, components. Especially for src/store/selectors/, src/hooks/, src/services/. Include @param, @returns, @throws.",
+          "files": [
+            "src/store/selectors/**/*.ts",
+            "src/hooks/**/*.ts",
+            "src/services/**/*.ts",
+            "src/features/**/services/**/*.ts"
+          ],
+          "dependencies": [],
+          "effort": "M",
+          "validationCriteria": [
+            "All public exports have JSDoc comments",
+            "IDE shows helpful autocompletion",
+            "Type information complete and accurate",
+            "Developer experience improved"
+          ]
+        },
+        {
+          "id": "task-4-9",
+          "title": "Enable additional strict TypeScript checks",
+          "description": "Update tsconfig.json: enable noImplicitReturns, noUnusedLocals, noUnusedParameters, exactOptionalPropertyTypes. Fix any compilation errors.",
+          "files": [
+            "tsconfig.json",
+            "src/**/*.ts",
+            "src/**/*.tsx"
+          ],
+          "dependencies": ["task-4-5"],
+          "effort": "M",
+          "validationCriteria": [
+            "tsconfig.json has strict checks enabled",
+            "tsc --noEmit passes without errors",
+            "No unused variables/parameters",
+            "All functions have explicit return types"
+          ]
+        },
+        {
+          "id": "task-4-10",
+          "title": "Verify code quality improvements & run linter",
+          "description": "Run eslint and TypeScript compiler. Review all changes for consistency. Update .eslintrc if needed to enforce these standards. Document code quality guidelines.",
+          "files": [
+            ".eslintrc",
+            ".github/instructions/react-typescript.instructions.md (update with new standards)"
+          ],
+          "dependencies": ["task-4-9"],
+          "effort": "S",
+          "validationCriteria": [
+            "Linter passes without errors",
+            "TypeScript compilation passes",
+            "Code quality metrics improved",
+            "Guidelines documented"
+          ]
+        }
+      ],
+      "estimatedDays": 5,
+      "risks": [
+        "Strict TypeScript checks may be initially blocky but are essential",
+        "Theme migration may uncover design inconsistencies",
+        "Some 'any' types may be difficult to properly type (document with comments)"
+      ],
+      "parallelize": [
+        "task-4-3",
+        "task-4-4",
+        "task-4-6"
+      ],
+      "rollbackStrategy": "This phase is mostly additive (strict rules, new types). Can disable strict TypeScript checks if needed, but not recommended. Type additions can be incrementally committed."
+    },
+    {
+      "phaseNumber": 5,
+      "name": "Performance Optimization & Test Coverage Expansion",
+      "priority": "P2",
+      "description": "Implement memoization, FlatList optimizations, image optimization. Expand test coverage from 25% to 70% with proper unit, integration, and E2E test structure.",
+      "objectives": [
+        "Add React.memo() to list items and expensive components",
+        "Optimize FlatList with keyExtractor, getItemLayout, maxToRenderPerBatch",
+        "Implement image optimization (lazy loading, progressive JPEG, responsive sizes)",
+        "Add bundle analysis and code splitting for features",
+        "Increase test coverage: 40+ unit tests, 15+ integration tests, 5+ E2E scenarios",
+        "Implement E2E tests for auth, cart, checkout flows using native testing",
+        "Add performance monitoring (console warnings for slow renders)",
+        "Document performance best practices"
+      ],
+      "tasks": [
+        {
+          "id": "task-5-1",
+          "title": "Identify and memoize list item components",
+          "description": "Audit ProductCard, CartItem, OrderItem components. Wrap with React.memo(). Add custom comparison functions if needed. Implement keyExtractor callbacks.",
+          "files": [
+            "src/features/product/components/ProductCard.tsx",
+            "src/features/cart/components/CartItem.tsx",
+            "src/features/order/components/OrderItem.tsx (if exists)"
+          ],
+          "dependencies": ["task-3-1"],
+          "effort": "S",
+          "validationCriteria": [
+            "List item components wrapped with React.memo()",
+            "Custom comparison only if complex props",
+            "keyExtractor properly extracts unique keys",
+            "List re-renders optimization verified"
+          ]
+        },
+        {
+          "id": "task-5-2",
+          "title": "Optimize FlatList components for performance",
+          "description": "In HomeScreen (products list) and CartScreen (cart items), implement: keyExtractor (memoized callback), getItemLayout, maxToRenderPerBatch, updateCellsBatchingPeriod, removeClippedSubviews.",
+          "files": [
+            "src/features/product/screens/HomeScreen.tsx",
+            "src/features/cart/screens/CartScreen.tsx",
+            "src/features/order/screens/OrderHistoryScreen.tsx"
+          ],
+          "dependencies": ["task-5-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "FlatList has keyExtractor (memoized via useCallback)",
+            "getItemLayout implemented for known item heights",
+            "maxToRenderPerBatch tuned (default 10, adjust for large lists)",
+            "Scrolling performance smooth (no jank)",
+            "Large lists (100+ items) handle efficiently"
+          ]
+        },
+        {
+          "id": "task-5-3",
+          "title": "Implement image optimization & lazy loading",
+          "description": "Audit product and profile images. Implement: lazy loading via react-native-fast-image or conditional rendering, responsive image sizes, caching headers. Create src/components/ui/OptimizedImage.tsx.",
+          "files": [
+            "src/components/ui/OptimizedImage.tsx",
+            "src/features/product/components/ProductCard.tsx (update image)",
+            "src/features/profile/components/Profile.tsx (update image)"
+          ],
+          "dependencies": [],
+          "effort": "M",
+          "validationCriteria": [
+            "Images lazy loaded (not all loaded immediately)",
+            "Image caching working (check network tab)",
+            "Responsive images for different screen sizes",
+            "No layout shift when images load",
+            "Bundle size reduced"
+          ]
+        },
+        {
+          "id": "task-5-4",
+          "title": "Add useMemo/useCallback optimizations to complex components",
+          "description": "Audit LoginForm, ProductDetailScreen, CheckoutScreen for expensive calculations/callbacks. Add useMemo for StyleSheet combinations, useCallback for event handlers passed as props.",
+          "files": [
+            "src/features/auth/components/LoginForm.tsx",
+            "src/features/product/screens/ProductDetailScreen.tsx",
+            "src/features/order/screens/CheckoutScreen.tsx"
+          ],
+          "dependencies": ["task-3-1"],
+          "effort": "M",
+          "validationCriteria": [
+            "Expensive calculations wrapped in useMemo",
+            "Event handlers wrapped in useCallback when passed to children",
+            "Dependency arrays correct and complete",
+            "Performance improvements measurable"
+          ]
+        },
+        {
+          "id": "task-5-5",
+          "title": "Create comprehensive unit test suite (target 40+ tests)",
+          "description": "Expand __tests__/components/, __tests__/screens/, __tests__/store/. Add tests for: auth thunks, cart selectors, product fetching, form validation, error handling. 70% line coverage target.",
+          "files": [
+            "__tests__/thunks/authThunks.test.ts (new)",
+            "__tests__/store/selectors/authSelectors.test.ts (new)",
+            "__tests__/store/cartSlice.test.ts (new)",
+            "__tests__/components/ProductCard.test.tsx",
+            "__tests__/screens/HomeScreen.test.tsx (new)",
+            "__tests__/screens/CartScreen.test.tsx (expand)",
+            "__tests__/screens/LoginScreen.test.tsx (expand)"
+          ],
+          "dependencies": ["task-2-10", "task-4-1"],
+          "effort": "L",
+          "validationCriteria": [
+            "40+ unit tests passing",
+            "70% code coverage for core features",
+            "All Redux slices and thunks tested",
+            "Form validation tested",
+            "Error handling tested",
+            "Component rendering tested"
+          ]
+        },
+        {
+          "id": "task-5-6",
+          "title": "Create integration tests (target 15+ tests)",
+          "description": "Create __tests__/integration/ with tests for: auth flow (login → navigate), cart flow (add → checkout), profile flow (edit → save). Use Redux test utilities.",
+          "files": [
+            "__tests__/integration/authFlow.test.tsx (new)",
+            "__tests__/integration/cartFlow.test.tsx (new)",
+            "__tests__/integration/checkoutFlow.test.tsx (new)",
+            "__tests__/integration/profileFlow.test.tsx (new)"
+          ],
+          "dependencies": ["task-5-5"],
+          "effort": "L",
+          "validationCriteria": [
+            "15+ integration tests passing",
+            "Auth flow tested end-to-end (login → home)",
+            "Cart flow tested (add → cart → checkout)",
+            "Profile update flow tested",
+            "Navigation between features tested",
+            "Redux state transitions verified"
+          ]
+        },
+        {
+          "id": "task-5-7",
+          "title": "Create E2E test scenarios (target 5+ scenarios)",
+          "description": "Create __tests__/e2e/ with critical user flows: login/logout, browse products, add to cart, checkout (with mock API). Use React Native Testing Library with mocked API.",
+          "files": [
+            "__tests__/e2e/loginLogout.test.tsx (new)",
+            "__tests__/e2e/browseAndAddToCart.test.tsx (new)",
+            "__tests__/e2e/checkout.test.tsx (new)",
+            "__tests__/e2e/profileManagement.test.tsx (new)"
+          ],
+          "dependencies": ["task-5-6"],
+          "effort": "L",
+          "validationCriteria": [
+            "5+ E2E test scenarios passing",
+            "Critical user flows covered",
+            "API mocked with MSW or custom hooks",
+            "User interactions tested end-to-end",
+            "Network failures handled gracefully"
+          ]
+        },
+        {
+          "id": "task-5-8",
+          "title": "Set up performance monitoring & profiling",
+          "description": "Add console.time/performance markers for screen transitions, API calls. Add React Native Performance Monitor. Document slow renders. Consider Sentry or similar for prod monitoring.",
+          "files": [
+            "src/utils/performance.ts (new)",
+            "src/utils/logging.ts (new)"
+          ],
+          "dependencies": [],
+          "effort": "M",
+          "validationCriteria": [
+            "Screen navigation times tracked",
+            "Slow renders identified and logged",
+            "API call durations measured",
+            "Memory usage monitored",
+            "Performance data accessible for analysis"
+          ]
+        },
+        {
+          "id": "task-5-9",
+          "title": "Implement code splitting for features (optional but recommended)",
+          "description": "Use React Navigation lazy loading. Load feature screens on demand: lazy(() => import('@/features/profile/screens/...')). Measure bundle impact.",
+          "files": [
+            "src/navigation/RootNavigator.tsx (update with lazy loading)"
+          ],
+          "dependencies": ["task-3-7"],
+          "effort": "S",
+          "validationCriteria": [
+            "Feature screens lazy loaded",
+            "Bundle size reduced",
+            "Initial app load faster",
+            "Navigation latency acceptable"
+          ]
+        },
+        {
+          "id": "task-5-10",
+          "title": "Final verification: performance & test coverage",
+          "description": "Run 'npm test' with coverage report. Verify 70% overall, 80%+ for critical paths (auth, cart). Run performance profiler. Document results and improvements achieved.",
+          "files": [
+            "docs/PERFORMANCE.md (new)",
+            "docs/TEST_COVERAGE.md (new)"
+          ],
+          "dependencies": [
+            "task-5-5",
+            "task-5-6",
+            "task-5-7"
+          ],
+          "effort": "M",
+          "validationCriteria": [
+            "70%+ test coverage achieved",
+            "80%+ coverage on critical features",
+            "Performance improvements documented",
+            "Memory usage optimized",
+            "All tests passing",
+            "CI/CD pipeline configured for coverage"
+          ]
+        }
+      ],
+      "estimatedDays": 8,
+      "risks": [
+        "Test coverage 25%→70% is significant work, may need 2-3 sprints",
+        "Performance optimizations may be premature without profiling - profile first",
+        "Image optimization complexity depends on image source (API, local, etc.)",
+        "E2E tests may be flaky if API/network mocking not properly configured"
+      ],
+      "parallelize": [
+        "task-5-1",
+        "task-5-4",
+        "task-5-8"
+      ],
+      "rollbackStrategy": "Test coverage and optimizations are low-risk. Can revert specific test files if needed. Performance optimizations can be toggled via feature flags."
+    }
+  ],
+  "totalEstimatedDays": 26,
+  "recommendedSequence": [
+    "Phase 1: Foundation & Tooling Setup (Days 1-2)",
+    "Phase 2: Redux State Management Migration (Days 3-7)",
+    "Phase 3: Architecture Refactoring (Days 8-13)",
+    "Phase 1-4 Parallel: TypeScript Strictness (Days 3-12 in parallel)",
+    "Phase 5: Performance & Testing (Days 14-26 or next sprint)"
+  ],
+  "parallelizationStrategy": {
+    "frontend": "Phase 1 tasks (tooling) can run in parallel. Phase 2 auth and cart migrations can run in parallel. Phase 3 features can be refactored in parallel (auth, product, cart, order, profile).",
+    "backend": "None required - API endpoints should already exist. Coordinate token refresh endpoint if needed.",
+    "testing": "Phase 5 can start after Phase 4 core code quality is done. Unit tests can be added incrementally throughout phases."
+  },
+  "migration_safety": {
+    "backward_compatibility": "Phase 1-4 maintain working app throughout. Use feature branches for large refactors. Test thoroughly before merging.",
+    "rollback_strategy": "Each phase has git checkpoints. Keep Zustand as optional peer dependency until fully migrated. Use feature flags for Redux toggle.",
+    "testing_gates": "Require 1) TypeScript compilation passes, 2) All screens functional, 3) Navigation working, 4) All tests passing before moving to next phase.",
+    "deployment_strategy": "Deploy phases incrementally: Phase 1 (tooling only), Phase 2 (Redux), Phase 3 (architecture), Phase 4 (quality), Phase 5 (performance)."
+  },
+  "dependencies_summary": {
+    "add": [
+      "@reduxjs/toolkit (latest)",
+      "react-redux (latest)",
+      "redux-persist (optional but recommended)"
+    ],
+    "remove": [
+      "zustand (after Phase 2 complete)"
+    ],
+    "verify": [
+      "@react-navigation/* (current versions compatible with Redux)",
+      "react-native (0.76.5 - ensure native modules compatible)",
+      "@testing-library/react-native (ensure test utilities work with Redux)"
+    ]
+  },
+  "critical_success_factors": [
+    "Strict TypeScript configuration enforced early (Phase 1) and maintained throughout",
+    "Redux store design clean and testable before migrating screens (Phase 2)",
+    "Architecture refactoring complete before scaling features (Phase 3)",
+    "Code quality standards enforced via CI/CD (Phase 4)",
+    "Test coverage and performance measurable and tracked (Phase 5)"
+  ],
+  "metrics_to_track": {
+    "before": {
+      "architecture": "Flat structure (25 files in src/screens/)",
+      "state_management": "Zustand (2 stores)",
+      "typescript_strict": false,
+      "test_coverage": "~25% (estimated)",
+      "bundle_size": "TBD - establish baseline",
+      "performance": "TBD - establish baseline"
+    },
+    "after": {
+      "architecture": "Feature-first (5 features, properly organized)",
+      "state_management": "Redux Toolkit with typed selectors",
+      "typescript_strict": true,
+      "test_coverage": "70%+ overall, 80%+ critical paths",
+      "bundle_size": "Reduced via code splitting",
+      "performance": "Smooth scrolling, optimized renders, lazy loading"
+    }
+  },
+  "documentation_deliverables": [
+    ".github/instructions/redux.instructions.md (Redux patterns)",
+    "Updated .github/instructions/react-archiecture.instructions.md (feature-first layout)",
+    "Updated .github/instructions/react-typescript.instructions.md (strict types + error handling)",
+    "docs/TECHNICAL_ARCHITECTURE.md (high-level overview)",
+    "docs/REDUX_MIGRATION_GUIDE.md (how to migrate screens)",
+    "docs/FEATURE_STRUCTURE.md (how to create new features)",
+    "docs/PERFORMANCE.md (optimization techniques)",
+    "docs/TEST_COVERAGE.md (test strategy + examples)"
+  ]
+}

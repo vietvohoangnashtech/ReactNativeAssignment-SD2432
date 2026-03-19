@@ -1,0 +1,767 @@
+{
+  "audit_timestamp": "2025-03-19",
+  "project": "React Native E-commerce Mobile App",
+  "summary": {
+    "total_issues": 47,
+    "critical": 8,
+    "high": 16,
+    "medium": 18,
+    "low": 5,
+    "overall_health": "FAIR - Architecture and testing need significant improvements"
+  },
+  "issues": [
+    {
+      "id": "ARCH-001",
+      "area": "ARCHITECTURE & STRUCTURE",
+      "severity": "critical",
+      "files": [
+        "src/"
+      ],
+      "description": "Project structure does not follow feature-first architecture. Currently using flat structure with src/screens, src/components, src/store instead of recommended src/features/[feature-name]/ organization with feature-scoped components, screens, hooks, and services.",
+      "recommendation": "Refactor to feature-first architecture: Create src/features/{auth, products, orders, cart}/ directories with nested structure (screens/, components/, hooks/, services/, store/, types/). Move shared components to src/components/ui/ or src/components/shared/.",
+      "files_affected": [
+        "src/screens/",
+        "src/components/",
+        "src/store/",
+        "src/hooks/",
+        "src/services/"
+      ]
+    },
+    {
+      "id": "ARCH-002",
+      "area": "ARCHITECTURE & STRUCTURE",
+      "severity": "high",
+      "files": [
+        "src/components",
+        "src/screens",
+        "src/store"
+      ],
+      "description": "Missing barrel exports (index.ts) in feature directories. This breaks the feature-first pattern and makes imports verbose.",
+      "recommendation": "Create index.ts files in each feature directory that export all public APIs from that feature.",
+      "files_affected": [
+        "src/screens/index.ts",
+        "src/components/index.ts",
+        "src/store/index.ts"
+      ]
+    },
+    {
+      "id": "PERF-001",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "HomeScreen renderProduct function is not memoized. This function is passed as renderItem to FlatList, causing unnecessary re-renders of all products when parent state changes.",
+      "recommendation": "Wrap renderProduct with useCallback and memoize the component passed to FlatList. Add React.memo wrapper with custom comparison if needed.",
+      "line_range": [
+        93,
+        125
+      ]
+    },
+    {
+      "id": "PERF-002",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "FlatList missing keyExtractor. Currently relies on default index-based key, which is inefficient for list updates and can cause rendering bugs.",
+      "recommendation": "Add keyExtractor={(item) => String(item.id)} to FlatList configuration.",
+      "line_range": [
+        192,
+        200
+      ]
+    },
+    {
+      "id": "PERF-003",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "FlatList missing getItemLayout optimization. Large product lists will have poor scroll performance and jank.",
+      "recommendation": "Add getItemLayout prop with estimated item height for virtualization optimization, or use numColumns to reduce visible items.",
+      "line_range": [
+        192,
+        200
+      ]
+    },
+    {
+      "id": "PERF-004",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/CartScreen.tsx"
+      ],
+      "description": "CartScreen renderItem is not memoized. This causes all cart items to re-render even when only one item quantity changes.",
+      "recommendation": "Extract renderItem to component, wrap with React.memo, and use useCallback for handler.",
+      "line_range": [
+        20,
+        60
+      ]
+    },
+    {
+      "id": "PERF-005",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/OrderHistoryScreen.tsx"
+      ],
+      "description": "OrderHistoryScreen renderOrder function not memoized. Causes all order cards to re-render on any state change.",
+      "recommendation": "Extract renderOrder to memoized component using React.memo.",
+      "line_range": [
+        80,
+        130
+      ]
+    },
+    {
+      "id": "PERF-006",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/components/LoginForm.tsx"
+      ],
+      "description": "handleSubmit callback includes unstable dependencies (username, password). Callback is recreated on every keystroke, causing unnecessary re-renders of child components.",
+      "recommendation": "Move form submission logic to useEffect or restructure to avoid including input values in dependencies. Use ref-based approach or move handler to parent.",
+      "line_range": [
+        20,
+        23
+      ]
+    },
+    {
+      "id": "PERF-007",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/ProductDetailScreen.tsx"
+      ],
+      "description": "Hardcoded review data and star ratings in map function causes unnecessary re-renders on every parent re-render. Should be moved to constant or memoized.",
+      "recommendation": "Extract hardcoded arrays to module-level constants (FEATURES, REVIEWS) to prevent object recreation.",
+      "line_range": [
+        78,
+        90
+      ]
+    },
+    {
+      "id": "PERF-008",
+      "area": "PERFORMANCE ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "Multiple inline style object creations in JSX (styles.productCard, etc.). Should use StyleSheet.create() which is already used but inline combinations happen.",
+      "recommendation": "Verify all style props use StyleSheet-created styles, not inline objects. Consider useMemo for dynamic style combinations.",
+      "line_range": [
+        93,
+        125
+      ]
+    },
+    {
+      "id": "TS-001",
+      "area": "TYPESCRIPT ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "Type assertion with 'any': (err: any) in fetchProducts catch block. Loses type safety for error handling.",
+      "recommendation": "Create proper error type: type ApiError = {response?: {data?: {message?: string | string[]}}} and use it instead of 'any'.",
+      "line_range": [
+        44,
+        47
+      ]
+    },
+    {
+      "id": "TS-002",
+      "area": "TYPESCRIPT ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/LoginScreen.tsx"
+      ],
+      "description": "Multiple 'any' type assertions in error handling: (err: any) appears multiple times without justification.",
+      "recommendation": "Define custom error type and use it throughout. Create utility function for extracting error messages.",
+      "line_range": [
+        92,
+        110
+      ]
+    },
+    {
+      "id": "TS-003",
+      "area": "TYPESCRIPT ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/ProductDetailScreen.tsx"
+      ],
+      "description": "Type assertion 'as any' on MaterialCommunityIcons icon name. Should use proper icon type or validate at runtime.",
+      "recommendation": "Create type for valid icon names: type IconName = 'battery-80' | 'bluetooth' | 'water' | 'shield-check'; export const FEATURES: Array<{icon: IconName, ...}",
+      "line_range": [
+        78,
+        90
+      ]
+    },
+    {
+      "id": "TS-004",
+      "area": "TYPESCRIPT ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/OrderHistoryScreen.tsx"
+      ],
+      "description": "Magic strings for status values without type safety (e.g., 'delivered', 'shipped', 'pending'). Should be union type.",
+      "recommendation": "Create type: type OrderStatus = 'delivered' | 'shipped' | 'processing' | 'pending' | 'cancelled'; and export from types/index.ts",
+      "line_range": [
+        42,
+        60
+      ]
+    },
+    {
+      "id": "TS-005",
+      "area": "TYPESCRIPT ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/store/authStore.ts"
+      ],
+      "description": "Missing return type annotation on UserInfo interface. setUser method doesn't return Promise<void> explicitly.",
+      "recommendation": "Add explicit return type: setUser: (user: UserInfo) => void;",
+      "line_range": [
+        23,
+        24
+      ]
+    },
+    {
+      "id": "CODE-001",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "critical",
+      "files": [
+        "src/screens/LoginScreen.tsx"
+      ],
+      "description": "Google Sign-in and Facebook Sign-in placeholder implementations that just set error messages. Not properly implemented but code suggests they should work, creating false expectations.",
+      "recommendation": "Either properly implement OAuth flows with @react-native-google-signin/google-signin and react-native-app-auth, or remove these functions and buttons entirely.",
+      "line_range": [
+        58,
+        90
+      ]
+    },
+    {
+      "id": "CODE-002",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/LoginScreen.tsx"
+      ],
+      "description": "No input validation for email format in signup beyond basic regex test. No password strength validation. No username format validation.",
+      "recommendation": "Create validation utilities: validateEmail(), validatePassword(), validateUsername(). Apply in onSubmit and provide specific error messages.",
+      "line_range": [
+        52,
+        57
+      ]
+    },
+    {
+      "id": "CODE-003",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/ProfileScreen.tsx"
+      ],
+      "description": "Hardcoded color values scattered throughout file instead of using theme constants. Makes theming difficult and increases maintenance burden.",
+      "recommendation": "Import all color constants from constants/theme.ts and replace inline color strings.",
+      "line_range": [
+        23,
+        30
+      ]
+    },
+    {
+      "id": "CODE-004",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/OrderHistoryScreen.tsx"
+      ],
+      "description": "Status styling configuration scattered with hardcoded colors (DELIVERED_BG, SHIPPED_BG, etc.) instead of theme-based. Difficult to maintain a cohesive design system.",
+      "recommendation": "Move statusConfig and color constants to constants/theme.ts or create constants/orderStatusTheme.ts",
+      "line_range": [
+        23,
+        45
+      ]
+    },
+    {
+      "id": "CODE-005",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/HomeScreen.tsx"
+      ],
+      "description": "Hardcoded categories array (CATEGORIES) should be from API or centralized config, not hardcoded in screen.",
+      "recommendation": "Move CATEGORIES to constants/categories.ts or fetch from /products/categories API endpoint.",
+      "line_range": [
+        28,
+        28
+      ]
+    },
+    {
+      "id": "CODE-006",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "high",
+      "files": [
+        "src/screens/ProductDetailScreen.tsx"
+      ],
+      "description": "Hardcoded review data with fake names and timestamps. Should be fetched from API or mocked properly in tests.",
+      "recommendation": "Create proper API endpoint /products/:id/reviews or move to mock data in __mocks__/ directory.",
+      "line_range": [
+        145,
+        175
+      ]
+    },
+    {
+      "id": "CODE-007",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/store/authStore.ts",
+        "src/store/cartStore.ts"
+      ],
+      "description": "Generic error logging with console.log hides actual errors. Production builds will have no visibility into failures.",
+      "recommendation": "Create error handling utility that logs to crash reporting service (Firebase, Sentry) in production.",
+      "line_range": [
+        35,
+        36
+      ]
+    },
+    {
+      "id": "CODE-008",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/LoginScreen.tsx"
+      ],
+      "description": "Password field shows/hides logic uses useState. No visual indicator of whether password is visible until user looks carefully.",
+      "recommendation": "Add icons to toggle visibility and proper styling to make toggle button more obvious.",
+      "line_range": [
+        21,
+        21
+      ]
+    },
+    {
+      "id": "CODE-009",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/CheckoutScreen.tsx"
+      ],
+      "description": "Payment method fetching happens with then/catch inside useEffect without proper cleanup or error boundary.",
+      "recommendation": "Use proper async/await in useEffect, add AbortController for cleanup, handle errors with state.",
+      "line_range": [
+        26,
+        34
+      ]
+    },
+    {
+      "id": "CODE-010",
+      "area": "CODE QUALITY ISSUES",
+      "severity": "medium",
+      "files": [
+        "src/screens/HomeScreen.tsx",
+        "src/screens/OrderHistoryScreen.tsx"
+      ],
+      "description": "Error messages displayed directly from API responses without sanitization. Could expose internal error details.",
+      "recommendation": "Create error message utility that maps API errors to user-friendly messages while logging actual errors.",
+      "line_range": [
+        60,
+        65
+      ]
+    },
+    {
+      "id": "TEST-001",
+      "area": "TESTING GAPS",
+      "severity": "critical",
+      "files": [
+        "__tests__/"
+      ],
+      "description": "Catastrophically low test coverage. Only 5 test files exist covering: authStore, cartStore, CartScreen, LoginScreen, ScreenHeader. Missing: HomeScreen, ProductDetailScreen, OrderHistoryScreen, CheckoutScreen, ProfileScreen, ProfileEdit, Profile, Layout, all utilities, all hooks.",
+      "recommendation": "Implement minimum 70% unit test coverage. Priority order: 1) Screens (HomeScreen, ProductDetail, OrderHistory, Checkout, Profile) 2) Components (Profile, ProfileEdit) 3) Utils (axios interceptors, localProfileDB) 4) Store async actions",
+      "files_affected": [
+        "__tests__/screens/HomeScreen.test.tsx",
+        "__tests__/screens/ProductDetailScreen.test.tsx",
+        "__tests__/screens/OrderHistoryScreen.test.tsx",
+        "__tests__/screens/CheckoutScreen.test.tsx",
+        "__tests__/screens/ProfileScreen.test.tsx",
+        "__tests__/components/Profile.test.tsx",
+        "__tests__/components/ProfileEdit.test.tsx",
+        "__tests__/utils/axios.test.ts",
+        "__tests__/utils/localProfileDB.test.ts"
+      ]
+    },
+    {
+      "id": "TEST-002",
+      "area": "TESTING GAPS",
+      "severity": "high",
+      "files": [
+        "__tests__/screens/LoginScreen.test.tsx"
+      ],
+      "description": "LoginScreen test file doesn't exist. Login is critical feature and should have comprehensive tests for signup, login, validation, error handling, redirect.",
+      "recommendation": "Create __tests__/screens/LoginScreen.test.tsx with tests for: validation, submission, error handling, tab switching, OAuth button states.",
+      "files_affected": [
+        "__tests__/screens/LoginScreen.test.tsx"
+      ]
+    },
+    {
+      "id": "TEST-003",
+      "area": "TESTING GAPS",
+      "severity": "high",
+      "files": [
+        "__tests__/"
+      ],
+      "description": "No integration tests for navigation flows. Can't verify: auth guard works, logged-in users can't reach login, navigation between screens works correctly.",
+      "recommendation": "Create __tests__/navigation/NavigationFlow.test.tsx with tests for auth-gated routes and navigation stacks.",
+      "files_affected": [
+        "__tests__/navigation/"
+      ]
+    },
+    {
+      "id": "TEST-004",
+      "area": "TESTING GAPS",
+      "severity": "high",
+      "files": [
+        "__tests__/"
+      ],
+      "description": "No tests for axios interceptor that adds auth token. Can't verify token is correctly attached to requests.",
+      "recommendation": "Create __tests__/utils/axios.test.ts to test request interceptor adds Bearer token.",
+      "files_affected": [
+        "__tests__/utils/axios.test.ts"
+      ]
+    },
+    {
+      "id": "TEST-005",
+      "area": "TESTING GAPS",
+      "severity": "high",
+      "files": [
+        "__tests__/"
+      ],
+      "description": "No tests for localProfileDB. Can't verify persistence layer works correctly, especially offline fallback logic.",
+      "recommendation": "Tests exist but incomplete. Expand __tests__/utils/localProfileDB.test.ts with full coverage of save/get/clear operations.",
+      "files_affected": [
+        "__tests__/utils/localProfileDB.test.ts"
+      ]
+    },
+    {
+      "id": "TEST-006",
+      "area": "TESTING GAPS",
+      "severity": "medium",
+      "files": [
+        "__tests__/store/authStore.test.ts"
+      ],
+      "description": "authStore tests don't cover token expiration verification and proper cleanup on expired token.",
+      "recommendation": "Add test for: expired token is cleared, user is logged out on load if token expired.",
+      "line_range": [
+        80,
+        100
+      ]
+    },
+    {
+      "id": "STATE-001",
+      "area": "STATE MANAGEMENT",
+      "severity": "critical",
+      "files": [
+        "src/store/authStore.ts",
+        "src/store/cartStore.ts"
+      ],
+      "description": "Using Zustand for state management instead of Redux Toolkit. Project instructions specify Redux Toolkit as the primary choice for global state management.",
+      "recommendation": "Migrate authStore and cartStore to Redux Toolkit using createSlice, createAsyncThunk pattern. Update all imports and hooks.",
+      "files_affected": [
+        "src/store/",
+        "src/slices/authSlice.ts",
+        "src/slices/cartSlice.ts",
+        "src/store/store.ts",
+        "src/store/rootReducer.ts"
+      ]
+    },
+    {
+      "id": "STATE-002",
+      "area": "STATE MANAGEMENT",
+      "severity": "high",
+      "files": [
+        "src/screens/CheckoutScreen.tsx"
+      ],
+      "description": "Payment methods fetching and state management happens in component instead of store. Breaks separation of concerns and makes caching/error handling difficult.",
+      "recommendation": "Create paymentMethodsSlice in Redux with async thunk for fetching, then dispatch in component on mount.",
+      "line_range": [
+        26,
+        34
+      ]
+    },
+    {
+      "id": "STATE-003",
+      "area": "STATE MANAGEMENT",
+      "severity": "high",
+      "files": [
+        "src/store/authStore.ts"
+      ],
+      "description": "Error states not tracked in authStore. Login failures don't set error state, making it impossible to display error messages from failed auth attempts.",
+      "recommendation": "Add error field to AuthState interface. Update login/loadToken to set error on failure.",
+      "line_range": [
+        8,
+        22
+      ]
+    },
+    {
+      "id": "STATE-004",
+      "area": "STATE MANAGEMENT",
+      "severity": "high",
+      "files": [
+        "src/store/cartStore.ts"
+      ],
+      "description": "Cart operations (addItem, updateQuantity) don't validate input or handle errors. Could silently fail if given invalid data.",
+      "recommendation": "Add input validation and error state. Return success/false from operations.",
+      "line_range": [
+        16,
+        45
+      ]
+    },
+    {
+      "id": "STATE-005",
+      "area": "STATE MANAGEMENT",
+      "severity": "medium",
+      "files": [
+        "src/store/authStore.ts"
+      ],
+      "description": "setUser function doesn't check if user is already loaded before overwriting. Could cause data loss if called concurrently.",
+      "recommendation": "Add loading state to prevent concurrent modifications. Update setUser to be async with proper error handling.",
+      "line_range": [
+        86,
+        89
+      ]
+    },
+    {
+      "id": "SEC-001",
+      "area": "SECURITY CONCERNS",
+      "severity": "high",
+      "files": [
+        "src/store/authStore.ts"
+      ],
+      "description": "Token is stored with expiration check but no mechanism to refresh expired token automatically. Users forced to re-login when token expires.",
+      "recommendation": "Implement refresh token flow: store refresh_token separately, catch 401 errors, automatically refresh token and retry request.",
+      "line_range": [
+        59,
+        73
+      ]
+    },
+    {
+      "id": "SEC-002",
+      "area": "SECURITY CONCERNS",
+      "severity": "high",
+      "files": [
+        "src/screens/LoginScreen.tsx",
+        "src/screens/ProfileScreen.tsx"
+      ],
+      "description": "Error messages sometimes display full server error responses which could leak sensitive information about backend structure.",
+      "recommendation": "Create error message mapper that logs real errors but shows generic messages to user. Only show specific messages for validation errors.",
+      "line_range": [
+        52,
+        57
+      ]
+    },
+    {
+      "id": "SEC-003",
+      "area": "SECURITY CONCERNS",
+      "severity": "medium",
+      "files": [
+        "src/screens/ProfileScreen.tsx"
+      ],
+      "description": "Profile data including email and full name displayed without any data masking. Could be sensitive if user is logged in on shared device.",
+      "recommendation": "Add privacy warning, mask email display (user@***.com), offer option to hide sensitive profile data.",
+      "line_range": [
+        180,
+        200
+      ]
+    },
+    {
+      "id": "SEC-004",
+      "area": "SECURITY CONCERNS",
+      "severity": "medium",
+      "files": [
+        "src/utils/axios.ts"
+      ],
+      "description": "No request timeout configured. Long-running requests could hang indefinitely in poor network conditions.",
+      "recommendation": "Add timeout: 30000 to axios config and implement retry logic with exponential backoff.",
+      "line_range": [
+        4,
+        8
+      ]
+    },
+    {
+      "id": "NAV-001",
+      "area": "NAVIGATION",
+      "severity": "high",
+      "files": [
+        "App.tsx"
+      ],
+      "description": "Navigation stack has duplicate screens: OrderHistory appears in both MainTabs and Stack navigator options. This could cause confusion in navigation flow.",
+      "recommendation": "Remove OrderHistory and OrderHistoryScreen from Stack.Screen options. Keep only in tabs. Use proper typing for RootStackParamList.",
+      "line_range": [
+        115,
+        125
+      ]
+    },
+    {
+      "id": "NAV-002",
+      "area": "NAVIGATION",
+      "severity": "medium",
+      "files": [
+        "App.tsx"
+      ],
+      "description": "inline function components for tab icons not extracted. Causes re-mount on every render due to // eslint-disable-next-line react/no-unstable-nested-components comment.",
+      "recommendation": "Extract tab icons to top-level component or memoized factory function.",
+      "line_range": [
+        45,
+        47
+      ]
+    }
+  ],
+  "summary_by_category": {
+    "ARCHITECTURE & STRUCTURE": {
+      "total": 2,
+      "critical": 1,
+      "high": 1,
+      "description": "Feature-first architecture not implemented. Current flat structure violates required organization pattern."
+    },
+    "PERFORMANCE ISSUES": {
+      "total": 8,
+      "critical": 0,
+      "high": 5,
+      "medium": 3,
+      "description": "Missing memoization in list items, FlatList optimization issues, hardcoded data causing re-renders, unmemoized callbacks."
+    },
+    "TYPESCRIPT ISSUES": {
+      "total": 5,
+      "critical": 0,
+      "high": 2,
+      "medium": 3,
+      "description": "Excessive use of 'any' type assertions, missing type definitions for enums, lack of error type definitions."
+    },
+    "CODE QUALITY ISSUES": {
+      "total": 10,
+      "critical": 1,
+      "high": 5,
+      "medium": 4,
+      "description": "Hardcoded values, placeholder implementations, missing input validation, poor error handling, scattered colors."
+    },
+    "TESTING GAPS": {
+      "total": 6,
+      "critical": 1,
+      "high": 4,
+      "medium": 1,
+      "description": "Coverage estimated <30%. Missing tests for critical screens, auth flows, and utilities."
+    },
+    "STATE MANAGEMENT": {
+      "total": 5,
+      "critical": 1,
+      "high": 3,
+      "medium": 1,
+      "description": "Using Zustand instead of Redux Toolkit. Missing error states, no validation, state in components instead of store."
+    },
+    "SECURITY CONCERNS": {
+      "total": 4,
+      "critical": 0,
+      "high": 2,
+      "medium": 2,
+      "description": "No token refresh mechanism, error messages leak backend info, missing request timeout, sensitive data exposure."
+    },
+    "NAVIGATION": {
+      "total": 2,
+      "critical": 0,
+      "high": 1,
+      "medium": 1,
+      "description": "Duplicate screens in navigation, unstable nested components in tab icons."
+    }
+  },
+  "priority_fixes": [
+    {
+      "priority": 1,
+      "issue": "ARCH-001 - Feature-first architecture refactor",
+      "effort": "high",
+      "impact": "critical",
+      "description": "Reorganize entire src/ directory to feature-first. Affects all imports and project structure."
+    },
+    {
+      "priority": 2,
+      "issue": "STATE-001 - Migrate to Redux Toolkit",
+      "effort": "high",
+      "impact": "critical",
+      "description": "Convert Zustand stores to Redux Toolkit. Aligns with spec and enables better devtools/debugging."
+    },
+    {
+      "priority": 3,
+      "issue": "TEST-001 - Implement unit test coverage",
+      "effort": "very_high",
+      "impact": "high",
+      "description": "Add ~80+ test files to reach 70% coverage. Priority: screens > components > utils."
+    },
+    {
+      "priority": 4,
+      "issue": "CODE-001 - Remove/implement OAuth methods",
+      "effort": "medium",
+      "impact": "high",
+      "description": "Either implement Google/Facebook sign-in properly or remove placeholder code that suggests it works."
+    },
+    {
+      "priority": 5,
+      "issue": "PERF-001,002,003 - Optimize HomeScreen FlatList",
+      "effort": "medium",
+      "impact": "high",
+      "description": "Memoize renderProduct, add keyExtractor, add getItemLayout for better scroll performance."
+    },
+    {
+      "priority": 6,
+      "issue": "SEC-001 - Implement token refresh flow",
+      "effort": "medium",
+      "impact": "high",
+      "description": "Auto-refresh expired tokens instead of forcing re-login."
+    },
+    {
+      "priority": 7,
+      "issue": "CODE-003,004,005 - Centralize theme/config",
+      "effort": "medium",
+      "impact": "medium",
+      "description": "Move hardcoded colors, categories, and configurations to centralized files."
+    },
+    {
+      "priority": 8,
+      "issue": "TS-001,002,003 - Remove 'any' type assertions",
+      "effort": "medium",
+      "impact": "medium",
+      "description": "Create proper error types and API response types instead of using 'any'."
+    }
+  ],
+  "recommendations_summary": {
+    "immediate_actions": [
+      "Remove Google/Facebook sign-in placeholder code or implement properly (CODE-001)",
+      "Add error state tracking to auth store so login failures can be displayed (STATE-003)",
+      "Implement FlatList keyExtractor and getItemLayout in HomeScreen (PERF-002, PERF-003)",
+      "Create proper error type instead of using 'any' everywhere (TS-001, TS-002)"
+    ],
+    "short_term": [
+      "Migrate from Zustand to Redux Toolkit (STATE-001)",
+      "Add memoization to all list item renders (PERF-001, PERF-004, PERF-005)",
+      "Implement token refresh mechanism (SEC-001)",
+      "Create 20+ critical unit tests (TEST-001)"
+    ],
+    "medium_term": [
+      "Refactor to feature-first architecture (ARCH-001)",
+      "Add barrel exports to all feature directories (ARCH-002)",
+      "Centralize theme constants and color definitions (CODE-003, CODE-004)",
+      "Reach 70% unit test coverage"
+    ],
+    "long_term": [
+      "Implement integration and E2E tests (TEST-001)",
+      "Add error boundary components",
+      "Implement analytics error tracking",
+      "Add performance monitoring with React DevTools Profiler"
+    ]
+  },
+  "metrics": {
+    "estimated_lines_of_code": 2500,
+    "estimated_components": 12,
+    "estimated_screens": 8,
+    "files_with_issues": 18,
+    "test_coverage_current": "~25%",
+    "test_coverage_target": "70%"
+  }
+}
