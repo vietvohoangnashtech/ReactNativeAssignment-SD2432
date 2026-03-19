@@ -1,0 +1,16 @@
+{
+  "name": "react-native-nestjs",
+  "version": "1.0.0",
+  "description": "React Native for mobile, NestJs for server api",
+  "engines": {
+    "node": "22.11.0",
+    "npm": "10.9.0"
+  },
+  "scripts": {
+    "server": "npm run start:dev --prefix server",
+    "mobile": "npm run android --prefix mobile",
+    "dev": "concurrently \"npm run server\" \"npm run mobile\""
+  },
+  "author": "Viet Vo Hoang",
+  "license": "ISC"
+}
