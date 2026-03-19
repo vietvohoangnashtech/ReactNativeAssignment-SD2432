@@ -16,4 +16,16 @@ export class User {
 
   @Column({ nullable: true })
   email?: string;
+
+  @Column({ nullable: true })
+  firstName?: string;
+
+  @Column({ nullable: true })
+  lastName?: string;
+
+  @Column({ nullable: true })
+  age?: number;
+
+  @Column({ default: 'user' })
+  role?: string;
 }

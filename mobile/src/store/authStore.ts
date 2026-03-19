@@ -3,13 +3,26 @@ import { immer } from 'zustand/middleware/immer';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {jwtDecode} from 'jwt-decode';
 
+export interface UserInfo {
+  id?: number;
+  username: string;
+  fullName?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  age?: number;
+  role?: string;
+}
+
 interface AuthState {
   isLoggedIn: boolean;
   token: string | null;
   loading: boolean;
-  login: (token: string) => Promise<void>;
+  user: UserInfo | null;
+  login: (token: string, user?: UserInfo) => Promise<void>;
   logout: () => Promise<void>;
   loadToken: () => Promise<void>;
+  setUser: (user: UserInfo) => void;
 }
 
 export const useAuthStore = create(
@@ -17,12 +30,19 @@ export const useAuthStore = create(
     isLoggedIn: false,
     token: null,
     loading: true,
-    login: async token => {
+    user: null,
+    login: async (token, user) => {
       try {
         await EncryptedStorage.setItem('auth_token', token);
+        if (user) {
+          await EncryptedStorage.setItem('auth_user', JSON.stringify(user));
+        }
         set(state => {
           state.token = token;
           state.isLoggedIn = true;
+          if (user) {
+            state.user = user;
+          }
         });
       } catch (error) {
         console.log('Error login', error);
@@ -31,9 +51,11 @@ export const useAuthStore = create(
     logout: async () => {
       try {
         await EncryptedStorage.removeItem('auth_token');
+        await EncryptedStorage.removeItem('auth_user');
         set(state => {
           state.token = null;
           state.isLoggedIn = false;
+          state.user = null;
         });
       } catch (error) {
         console.log('Error logout', error);
@@ -43,28 +65,39 @@ export const useAuthStore = create(
       try {
         const storedToken = await EncryptedStorage.getItem('auth_token');
         if (storedToken) {
-          // check if token is expired
           const decodeToken = jwtDecode(storedToken);
           const isExpired = decodeToken.exp
             ? Date.now() >= decodeToken.exp * 1000
             : true;
           if (isExpired) {
             await EncryptedStorage.removeItem('auth_token');
+            await EncryptedStorage.removeItem('auth_user');
           } else {
+            const storedUser = await EncryptedStorage.getItem('auth_user');
             set(state => {
               state.token = storedToken;
               state.isLoggedIn = true;
+              if (storedUser) {
+                state.user = JSON.parse(storedUser);
+              }
             });
           }
         }
       } catch (error) {
         console.log('error load token', error);
         await EncryptedStorage.removeItem('auth_token');
+        await EncryptedStorage.removeItem('auth_user');
       } finally {
         set(state => {
           state.loading = false;
         });
       }
+    },
+    setUser: (user: UserInfo) => {
+      set(state => {
+        state.user = user;
+      });
+      EncryptedStorage.setItem('auth_user', JSON.stringify(user)).catch(() => {});
     },
   })),
 );

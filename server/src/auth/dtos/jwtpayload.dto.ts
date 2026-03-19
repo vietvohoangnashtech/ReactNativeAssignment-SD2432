@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsNotEmpty } from 'class-validator';
+import { IsNumber, IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class JwtPayload {
   @IsNumber()
@@ -8,4 +8,8 @@ export class JwtPayload {
   @IsString()
   @IsNotEmpty()
   username: string;
+
+  @IsString()
+  @IsOptional()
+  role?: string;
 }

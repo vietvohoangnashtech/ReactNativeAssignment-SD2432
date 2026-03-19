@@ -1,22 +1,26 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {Button, Text, TextInput} from 'react-native-paper';
-import clsx from 'clsx';
 
-interface Props {
-  onSubmit: (data: any) => void;
+export interface LoginFormData {
+  username: string;
+  password: string;
+}
+
+export interface LoginFormProps {
+  onSubmit: (data: LoginFormData) => void;
   isRegister?: boolean;
   loading: boolean;
   error?: string | null;
 }
 
-const LoginForm: React.FC<Props> = ({onSubmit, isRegister, loading, error}) => {
+export const LoginForm: React.FC<LoginFormProps> = ({onSubmit, isRegister, loading, error}) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     onSubmit({username, password});
-  };
+  }, [onSubmit, username, password]);
 
   const btnText = isRegister ? 'Register' : 'Login';
 
@@ -35,12 +39,13 @@ const LoginForm: React.FC<Props> = ({onSubmit, isRegister, loading, error}) => {
         onChangeText={setPassword}
         secureTextEntry
       />
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error ? <Text style={styles.error} testID="login-error">{error}</Text> : null}
       <Button
         mode="contained"
         loading={loading}
         disabled={loading}
-        onPress={handleSubmit}>
+        onPress={handleSubmit}
+        testID="login-submit-btn">
         {btnText}
       </Button>
     </View>
@@ -63,5 +68,3 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 });
-
-export default LoginForm;

@@ -13,9 +13,14 @@ export class ProfilesService {
     }
 
     return {
+      id: user.id,
+      username: user.username,
       fullName: user.fullName,
       email: user.email,
-      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      age: user.age,
+      role: user.role,
     };
   }
 
