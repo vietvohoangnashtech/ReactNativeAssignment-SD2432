@@ -1,23 +1,20 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import {Text} from 'react-native-paper';
+import type {ProfileData} from '../types';
 
-interface Props {
-  profile: {
-    username: string;
-    fullName?: string;
-    email?: string;
-  };
+export interface ProfileProps {
+  profile: Pick<ProfileData, 'username' | 'fullName' | 'email'>;
 }
 
-const Profile: React.FC<Props> = ({profile}) => {
+export const Profile: React.FC<ProfileProps> = ({profile}) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Username: {profile.username}</Text>
-      {profile.fullName && (
-        <Text style={styles.text}>Full Name: {profile.fullName}</Text>
-      )}
-      {profile.email && <Text style={styles.text}>Email: {profile.email}</Text>}
+    <View style={styles.container} testID="profile-container">
+      <Text style={styles.text} testID="profile-username">Username: {profile.username}</Text>
+      {profile.fullName ? (
+        <Text style={styles.text} testID="profile-fullname">Full Name: {profile.fullName}</Text>
+      ) : null}
+      {profile.email ? <Text style={styles.text} testID="profile-email">Email: {profile.email}</Text> : null}
     </View>
   );
 };
@@ -31,5 +28,3 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 });
-
-export default Profile;

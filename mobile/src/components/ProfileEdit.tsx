@@ -1,22 +1,27 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {Button, TextInput} from 'react-native-paper';
 
-interface Props {
+export interface ProfileEditData {
+  fullName: string;
+  email: string;
+}
+
+export interface ProfileEditProps {
   profile: {
     fullName?: string;
     email?: string;
   };
-  onSubmit: (data: any) => void;
+  onSubmit: (data: ProfileEditData) => void;
 }
 
-const ProfileEdit: React.FC<Props> = ({profile, onSubmit}) => {
+export const ProfileEdit: React.FC<ProfileEditProps> = ({profile, onSubmit}) => {
   const [fullName, setFullName] = useState(profile.fullName || '');
   const [email, setEmail] = useState(profile.email || '');
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     onSubmit({fullName, email});
-  };
+  }, [onSubmit, fullName, email]);
 
   return (
     <View style={styles.container}>
@@ -25,14 +30,16 @@ const ProfileEdit: React.FC<Props> = ({profile, onSubmit}) => {
         placeholder="Full Name"
         value={fullName}
         onChangeText={setFullName}
+        testID="profile-edit-fullname"
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        testID="profile-edit-email"
       />
-      <Button mode="contained" onPress={handleSubmit}>
+      <Button mode="contained" onPress={handleSubmit} testID="profile-edit-save">
         Save
       </Button>
     </View>
@@ -52,5 +59,3 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 });
-
-export default ProfileEdit;

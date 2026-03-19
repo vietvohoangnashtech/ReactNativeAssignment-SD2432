@@ -1,11 +1,23 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEmail } from 'class-validator';
 
 export class ProfileDto {
   @IsString()
   @IsOptional()
   fullName?: string;
 
-  @IsString()
+  @IsEmail()
   @IsOptional()
   email?: string;
+
+  @IsString()
+  @IsOptional()
+  firstName?: string;
+
+  @IsString()
+  @IsOptional()
+  lastName?: string;
+
+  @IsNumber()
+  @IsOptional()
+  age?: number;
 }

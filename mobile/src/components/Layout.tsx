@@ -8,7 +8,11 @@ import {
 import {useMaterial3Theme} from '@pchmn/expo-material3-theme';
 import {useColorScheme} from 'react-native';
 
-const Layout = ({children}: {children: React.ReactNode}) => {
+export interface LayoutProps {
+  children: React.ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({children}) => {
   const colorScheme = useColorScheme() || 'light';
   const {theme} = useMaterial3Theme();
 
@@ -39,5 +43,3 @@ const Layout = ({children}: {children: React.ReactNode}) => {
     </PaperProvider>
   );
 };
-
-export default Layout;
